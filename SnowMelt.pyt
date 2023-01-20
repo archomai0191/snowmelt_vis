@@ -25,13 +25,25 @@ def execute_copy(parameters, messages, date_folder):
     return (in_path, out_path_les, out_path_pole)
 
 def execute_changefield(out_path_les, out_path_pole, needs_calc, parameters, messages):
-    arcpy.management.CalculateField(out_path_les, "Date_", '"{date}"'.format(date = parameters[1].valueAsText))
-    arcpy.management.CalculateField(out_path_pole, "Date_", '"{date}"'.format(date = parameters[1].valueAsText))
+    try:
+        arcpy.management.CalculateField(out_path_les, "Date_", '"{date}"'.format(date = parameters[1].valueAsText))
+    except:
+        arcpy.management.AddField(out_path_les, "Date_", "DATE")
+        arcpy.management.AddField(out_path_pole, "Date_", "DATE")
+        arcpy.management.CalculateField(out_path_les, "Date_", '"{date}"'.format(date = parameters[1].valueAsText))
+    finally:
+        arcpy.management.CalculateField(out_path_pole, "Date_", '"{date}"'.format(date = parameters[1].valueAsText))
     messages.addMessage("date fields changed successfully")
 
     if needs_calc:
-        arcpy.management.CalculateField(out_path_les, "has_snow", "0")
-        arcpy.management.CalculateField(out_path_pole, "has_snow", "0")
+        try:
+            arcpy.management.CalculateField(out_path_les, "has_snow", "0")
+        except:
+            arcpy.management.AddField(out_path_les, "has_snow", "SHORT")
+            arcpy.management.AddField(out_path_pole, "has_snow", "SHORT")
+            arcpy.management.CalculateField(out_path_les, "has_snow", "0")
+        finally:
+            arcpy.management.CalculateField(out_path_pole, "has_snow", "0")
         messages.addMessage("has_snow fields changed successfully")
 
     arcpy.management.CalculateField(out_path_les, "Merge2", '!Merge!+"_"+!Date_!', expression_type="PYTHON_9.3")
